@@ -33,6 +33,9 @@ else await runInEntry(entryKernel(process.env, { configured }))
 
 /** bin/dsh-tui.js `MSG.noDsh`, newline-terminated. */
 function noDshGuidance(): string {
+  if (process.env.DSH_TUI_LANG === 'ja') {
+    return '[dsh-tui] dsh CLI が見つかりません。先に公式クライアントをインストールしてください:\n  npm install -g @deepseek-ai/dsh\n'
+  }
   return process.env.DSH_TUI_LANG === 'en'
     ? '[dsh-tui] dsh CLI not found. Install the official client first:\n  npm install -g @deepseek-ai/dsh\n'
     : '[dsh-tui] 未检测到 dsh CLI。请先安装官方客户端：\n  npm install -g @deepseek-ai/dsh\n'

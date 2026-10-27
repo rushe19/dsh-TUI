@@ -28,7 +28,7 @@ import { SPINNER_VERBS } from '../src/terminal-utils/spinnerVerbs.js'
 
 /** Dictionaries a backend carries itself (B-3, B-5), audited with the same
  *  rules minus the dead-key one (see the section at the end). */
-const BACKEND_TEXT_MODULES: readonly { readonly module: string; readonly dict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText }>> }[] = [
+const BACKEND_TEXT_MODULES: readonly { readonly module: string; readonly dict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText; readonly ja?: I18nText }>> }[] = [
   { module: 'src/backends/claude/text.ts', dict: claudeTexts },
   { module: 'src/backends/codex/text.ts', dict: codexTexts },
 ]
@@ -81,7 +81,8 @@ const singleBrace = /(?<!\{)\{(\w+)\}(?!\})/
 for (const [key, entry] of Object.entries(i18nDict)) {
   if (entry.zh === undefined) fail(`${key}: 缺 zh`)
   if (entry.en === undefined && !key.startsWith('cmd-desc-')) fail(`${key}: 缺 en`)
-  for (const lang of ['zh', 'en'] as const) {
+  if (entry.ja === undefined) fail(`${key}: 缺 ja`)
+  for (const lang of ['zh', 'en', 'ja'] as const) {
     for (const form of forms(entry[lang])) {
       const m = singleBrace.exec(form)
       if (m) fail(`${key}.${lang}: 单花括号 {${m[1]}}——t() 不替换，应为 {{${m[1]}}}`)
@@ -91,6 +92,11 @@ for (const [key, entry] of Object.entries(i18nDict)) {
   const en = placeholders(entry.en)
   if (entry.en !== undefined && !isSubset(zh, en) && !isSubset(en, zh)) {
     fail(`${key}: 占位符名不一致 zh={{${[...zh].join(',')}}} en={{${[...en].join(',')}}}`)
+  }
+  const ja = placeholders(entry.ja)
+  const ref = entry.en !== undefined ? en : zh
+  if (entry.ja !== undefined && !isSubset(ja, ref) && !isSubset(ref, ja)) {
+    fail(`${key}: 占位符名不一致 ja={{${[...ja].join(',')}}} ${entry.en !== undefined ? 'en' : 'zh'}={{${[...ref].join(',')}}}`)
   }
 }
 
@@ -102,7 +108,7 @@ const files = [...new Set(execFileSync('git', ['ls-files', '-z', '--cached', '--
   // 字典文件自身不算"使用"：条目就定义在里面，否则任何死 key 都能被自己的
   // 定义救活。平台文案真源（C-2）同理——它里面的键是定义，消费点在宿主字典
   // 与两个后端（各以字面量引用，见 §6）。
-  .filter(f => f !== 'src/i18n.ts' && f !== 'scripts/verify-i18n.ts' && f !== PLATFORM_TEXT_SOURCE)
+  .filter(f => f !== 'src/i18n.ts' && f !== 'src/i18n.ja.ts' && f !== 'scripts/verify-i18n.ts' && f !== PLATFORM_TEXT_SOURCE)
 let corpus = ''
 for (const f of files) {
   // Worktrees may have deleted tracked files before a later commit; a missing
@@ -144,7 +150,8 @@ for (const { module, dict } of BACKEND_TEXT_MODULES) {
   for (const [key, entry] of Object.entries(dict)) {
     if (entry.zh === undefined) fail(`${module}: ${key}: 缺 zh`)
     if (entry.en === undefined) fail(`${module}: ${key}: 缺 en`)
-    for (const lang of ['zh', 'en'] as const) {
+    if (entry.ja === undefined) fail(`${module}: ${key}: 缺 ja`)
+    for (const lang of ['zh', 'en', 'ja'] as const) {
       for (const form of forms(entry[lang])) {
         const m = singleBrace.exec(form)
         if (m) fail(`${module}: ${key}.${lang}: 单花括号 {${m[1]}}——模板只替换 {{${m[1]}}}`)
@@ -154,6 +161,10 @@ for (const { module, dict } of BACKEND_TEXT_MODULES) {
     const en = placeholders(entry.en)
     if (entry.en !== undefined && !isSubset(zh, en) && !isSubset(en, zh)) {
       fail(`${module}: ${key}: 占位符名不一致 zh={{${[...zh].join(',')}}} en={{${[...en].join(',')}}}`)
+    }
+    const ja = placeholders(entry.ja)
+    if (entry.ja !== undefined && entry.en !== undefined && !isSubset(ja, en) && !isSubset(en, ja)) {
+      fail(`${module}: ${key}: 占位符名不一致 ja={{${[...ja].join(',')}}} en={{${[...en].join(',')}}}`)
     }
   }
 }
@@ -166,7 +177,7 @@ for (const { module, dict } of BACKEND_TEXT_MODULES) {
 // 都会红。性质：防的是"副本被重新引入"，不是防键缺失（缺键由存在性检查兜住）。
 const PLATFORM_TEXT_CONSUMERS: readonly {
   readonly module: string
-  readonly dict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText }>>
+  readonly dict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText; readonly ja?: I18nText }>>
   readonly keys: readonly PlatformTextKey[]
 }[] = [
   {
@@ -188,7 +199,7 @@ for (const key of platformKeys) {
     fail(`i18nDict: ${key}: 平台文案没有展开——${PLATFORM_TEXT_SOURCE} 的每个键都必须出现在宿主字典里`)
     continue
   }
-  for (const lang of ['zh', 'en'] as const) {
+  for (const lang of ['zh', 'en', 'ja'] as const) {
     if (entry[lang] !== PLATFORM_TEXT[key][lang]) {
       fail(`i18nDict: ${key}.${lang}: 与 ${PLATFORM_TEXT_SOURCE} 不一致（宿主字典不得另存一份副本）${JSON.stringify(entry[lang])} ≠ ${JSON.stringify(PLATFORM_TEXT[key][lang])}`)
     }
@@ -207,7 +218,7 @@ for (const { module, dict, keys } of PLATFORM_TEXT_CONSUMERS) {
   for (const key of keys) {
     const entry = dict[key]
     if (entry === undefined) continue // 集合比对已报过；这里只比字面值
-    for (const lang of ['zh', 'en'] as const) {
+    for (const lang of ['zh', 'en', 'ja'] as const) {
       if (entry[lang] !== PLATFORM_TEXT[key][lang]) {
         fail(`${module}: ${key}.${lang}: 与 ${PLATFORM_TEXT_SOURCE} 不一致（不得另写副本）${JSON.stringify(entry[lang])} ≠ ${JSON.stringify(PLATFORM_TEXT[key][lang])}`)
       }

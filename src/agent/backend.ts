@@ -130,7 +130,7 @@ export interface BackendTokenStore {
 
 /** The languages the TUI ships (`src/i18n.ts`'s `Lang`, restated here so the
  *  domain contract does not depend on the host dictionary module). */
-export type BackendLocale = 'zh' | 'en'
+export type BackendLocale = 'zh' | 'en' | 'ja'
 
 /** Host services a backend may use while detecting or opening. */
 export interface BackendHost {

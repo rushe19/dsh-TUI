@@ -5,7 +5,9 @@
  * - the editable Config keys derived from the definitions are Config fields
  *   and still include every key of the hand-written list they replaced;
  * - scripts/gen-settings-json.mjs validates the definitions (both
- *   languages, option labels, sorted keys) against the compiled lib.
+ *   languages, option labels, sorted keys) against the compiled lib;
+ * - the Japanese copy (definitions.ja.ts, merged at module load) covers
+ *   every definition, option, group and shortcut field.
  * Run: node --import tsx/esm scripts/verify-settings-definitions.ts
  * (after pnpm compile — the generator reads lib/).
  */
@@ -14,7 +16,8 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { Config } from '../src/dsh-adapter/index.js'
-import { EDITABLE_CONFIG_KEYS, SETTING_DEFINITIONS, SETTING_GROUPS } from '../src/settings/definitions.js'
+import { EDITABLE_CONFIG_KEYS, SETTING_DEFINITIONS, SETTING_GROUPS, SHORTCUT_FIELD_META } from '../src/settings/definitions.js'
+import { SETTINGS_JA, SETTING_GROUP_JA } from '../src/settings/definitions.ja.js'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const plugin = readFileSync(`${root}src/dsh-adapter/plugin.ts`, 'utf8')
@@ -73,6 +76,40 @@ assert.deepEqual(
   [],
   'every built-in setting names a group',
 )
+
+// Japanese copy (definitions.ja.ts, merged at module load): every setting,
+// option and shortcut field carries ja, and the ja map stays 1:1 with the
+// definitions so a new setting cannot ship without its Japanese text.
+assert.deepEqual(
+  Object.keys(SETTING_DEFINITIONS).filter(key => SETTINGS_JA[key] === undefined),
+  [],
+  'every setting definition carries ja copy',
+)
+assert.deepEqual(
+  Object.keys(SETTINGS_JA).filter(key => SETTING_DEFINITIONS[key as keyof typeof SETTING_DEFINITIONS] === undefined),
+  [],
+  'SETTINGS_JA has no unknown keys',
+)
+for (const [key, definition] of Object.entries(SETTING_DEFINITIONS)) {
+  assert.equal(definition.descriptions?.ja, SETTINGS_JA[key]!.label, `${key}: descriptions.ja merged`)
+  assert.equal(definition.hintDescriptions?.ja, SETTINGS_JA[key]!.hint, `${key}: hintDescriptions.ja merged`)
+  const options = definition.options ?? []
+  const jaOptions = SETTINGS_JA[key]!.options ?? {}
+  for (const option of options) {
+    const expected = jaOptions[option.value]
+    assert.ok(expected !== undefined, `${key}: option ${option.value} has ja label`)
+    assert.equal(option.descriptions?.ja, expected, `${key}: option ${option.value} ja label merged`)
+  }
+}
+assert.deepEqual(
+  SETTING_GROUPS.filter(group => group.descriptions?.ja !== SETTING_GROUP_JA[group.id]).map(group => group.id),
+  [],
+  'every settings group carries a ja title',
+)
+for (const [action, meta] of Object.entries(SHORTCUT_FIELD_META)) {
+  assert.ok(meta.ja !== undefined && meta.ja !== '', `${action}: shortcut label has ja`)
+  assert.ok(typeof meta.hintJa === 'function', `${action}: shortcut hint has ja`)
+}
 
 const generated = spawnSync(process.execPath, [`${root}scripts/gen-settings-json.mjs`, '--check'], { encoding: 'utf8' })
 assert.equal(generated.status, 0, `settings.json generation fails:\n${generated.stderr}`)

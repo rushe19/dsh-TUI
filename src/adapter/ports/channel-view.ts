@@ -93,7 +93,7 @@ export interface WorkingActivityView {
   /** Timestamp of the last folded event (how fresh the value is). */
   readonly updatedAt: number
   /** Language the line was rendered in. */
-  readonly lang: 'zh' | 'en'
+  readonly lang: 'zh' | 'en' | 'ja'
 }
 
 /**

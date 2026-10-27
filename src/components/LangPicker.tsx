@@ -6,9 +6,12 @@ import { Select } from './Select.js'
 import { HintLine } from './design-system/HintLine.js'
 
 /**
- * `/lang` en/zh picker: bare `/lang` opens this picker (the current language
- * marked) and Enter applies the choice through the same path as `/lang <id>`.
+ * `/lang` zh/en/ja picker: bare `/lang` opens this picker (the current
+ * language marked) and Enter applies the choice through the same path as
+ * `/lang <id>`.
  */
+const LANG_LABELS: Record<Lang, string> = { zh: '中文', en: 'English', ja: '日本語' }
+const LANG_DESC_KEYS = { zh: 'lang-zh-desc', en: 'lang-en-desc', ja: 'lang-ja-desc' } as const
 export function LangPicker({
   focusIndex,
   currentLang,
@@ -31,8 +34,8 @@ export function LangPicker({
         <Select
           options={LANGS.map(lang => ({
             value: lang,
-            label: lang === 'zh' ? '中文' : 'English',
-            description: t(lang === 'zh' ? 'lang-zh-desc' : 'lang-en-desc'),
+            label: LANG_LABELS[lang],
+            description: t(LANG_DESC_KEYS[lang]),
           }))}
           focusIndex={focusIndex}
           selectedValue={currentLang}

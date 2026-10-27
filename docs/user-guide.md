@@ -299,7 +299,7 @@ dsh-tui
 ## 3. 命令全集
 
 命令菜单 = 内置命令（含别名） + DSH 注册表命令（`/plan` `/goal` 等） + 技能目录
-（仅补全，`/help` 菜单隐藏）。`/lang` 可切换中英文界面与命令描述。
+（仅补全，`/help` 菜单隐藏）。`/lang` 可切换中/英/日文界面与命令描述。
 
 ### 3.1 会话
 
@@ -356,7 +356,7 @@ dsh-tui
 | `/preset` | `<id>` / `status` | Agent 预设切换：`standard` / `ptc`（旧 0.1.1 名 `code`）/ `minimal` / `cordis` / **梁神模式 `liangshen`**；**已开始的会话不可切换**。持久化 `~/.dsh-tui/agent-preset.json` |
 | `/theme` | `<名字>` / `status` | 主题：无参选择器；`<名字>` 直接切换；`status` 当前主题（auto 时附 OSC 11 解析结果）。持久化 `~/.dsh-tui/theme.json` |
 | `/color` | 无参 / `<名>` / `status` / `reset` | 会话强调色：无参打开调色板（`↑/↓` 选、`Enter` 应用）；`<名>` 直设；`reset` 恢复默认。颜色 `red/orange/yellow/green/blue/purple/pink/cyan`，按会话保存 |
-| `/lang` | `en` / `zh` / `status` | 界面语言热切换。优先级：`DSH_TUI_LANG` > profile 配置（旧版 settings.yaml 用户层 > cordis.yml）> 持久化 |
+| `/lang` | `en` / `zh` / `ja` / `status` | 界面语言热切换。优先级：`DSH_TUI_LANG` > profile 配置（旧版 settings.yaml 用户层 > cordis.yml）> 持久化 |
 | `/vim` | 无 | **vim 编辑模式开关**（见 §2.4）：输入框切到 vim 键位编辑，会话级、不持久化 |
 | `/panel` | `toggle` / `focus` / `zoom` / `<面板 id>` | 侧栏面板：开关 / 聚焦 / 缩放 / 切换；三态与子命令见 §2.8 |
 
@@ -570,7 +570,7 @@ dsh-tui 自身区块在 0.1.7 写入当前 profile 的 `cordis.patch.yml`，旧�
 
 | 字段 | 说明 |
 |---|---|
-| lang | 界面语言 zh/en（DSH_TUI_LANG 钉死时不可改） |
+| lang | 界面语言 zh/en/ja（DSH_TUI_LANG 钉死时不可改） |
 | fullscreen | 全屏模式（默认开）；保存后用 `/restart` 生效 |
 | launchpad | 启动页（落地页，默认开）：普通启动先落启动页输入第一句话；关闭后直接进入聊天页（带 `--resume` 等恢复目标的启动不受影响，仍直接进会话）。保存后用 `/restart` 生效 |
 | minimal | 极简界面 Minimal UI（默认关）：隐藏开屏头部、emoji 状态符与装饰性配色，底栏只留模型与目录；代码高亮与工具配色保留。**这是界面开关**，对模型能力没有任何影响——别和 `/preset` 的内核「极简模式」预设搞混 |
@@ -651,7 +651,7 @@ dsh 意外退出时，安全模式给出**只读**的环境诊断、profile 插�
 | Agent 预设 | `/preset` | `standard` / `ptc`（旧 0.1.1 名 `code`）/ `minimal` / `cordis` / **梁神模式 `liangshen`**；**已开始会话不可切换** |
 | 主题 | `/theme` | `auto`（OSC 11 跟随终端背景）/ `light` / `dark` / `dark-ansi` / `pink-day` / `pink-night` / `pink-ansi`；`/theme <名>` 直接切；`/theme status` 看解析结果 |
 | 自定义主题 | 手动 | `~/.dsh-tui/themes/<名>.json`，`{base, colors}` 格式，选中即热切换；命名为 `auto` 会被内置遮蔽 |
-| 语言 | `/lang` | `en` / `zh` 热切换；优先级 `DSH_TUI_LANG` > profile 配置（旧版 settings.yaml 用户层 > cordis.yml）> 持久化 |
+| 语言 | `/lang` | `en` / `zh` / `ja` 热切换；优先级 `DSH_TUI_LANG` > profile 配置（旧版 settings.yaml 用户层 > cordis.yml）> 持久化 |
 | 状态行动画 | `/activity` | 选择器或 `/activity frames <名>`；默认 `moon8`，`random` 随机 |
 
 **主题优先级**：`DSH_TUI_THEME` > `~/.dsh-tui/theme.json` > OSC 11 终端背景检测 > dark 回退。
@@ -677,7 +677,7 @@ dsh 意外退出时，安全模式给出**只读**的环境诊断、profile 插�
 
 1. `?` 看快捷键、`/` 看命令，两者都支持 Tab 补全。
 2. 不确定环境对不对？先 `/doctor`；想看会话全貌用 `/status`。
-3. 中英界面 `/lang en|zh`，即时生效并持久化。
+3. 中/英/日文界面 `/lang en|zh|ja`，即时生效并持久化。
 
 **效率**
 

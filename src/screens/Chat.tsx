@@ -3115,9 +3115,9 @@ export function Chat({
         return true
       }
       case 'lang': {
-        // `/lang` shows the current UI language, `/lang en|zh` switches
+        // `/lang` shows the current UI language, `/lang en|zh|ja` switches
         // (hot-swap, persisted to ~/.dsh-tui/lang.json), bare `/lang` opens
-        // the en/zh picker. Precedence on next launch: DSH_TUI_LANG >
+        // the language picker. Precedence on next launch: DSH_TUI_LANG >
         // settings.yaml `dsh-tui.lang` > cordis.yml `lang` > the persisted
         // choice.
         const parts = rawInput.trim().split(/\s+/).filter(Boolean)
@@ -3142,7 +3142,7 @@ export function Chat({
         setHelpOpen(false)
         dispatchOverlay({
           type: 'open',
-          overlay: { kind: 'lang', index: getLang() === 'zh' ? 0 : 1 },
+          overlay: { kind: 'lang', index: LANGS.indexOf(getLang()) },
         })
         return true
       }
@@ -5514,7 +5514,7 @@ export function Chat({
     }
     if (overlay.kind === 'lang') {
       if (key.upArrow || key.downArrow) {
-        dispatchOverlay({ type: 'move', delta: key.upArrow ? -1 : 1, count: 2 })
+        dispatchOverlay({ type: 'move', delta: key.upArrow ? -1 : 1, count: LANGS.length })
       } else if (plainReturn) {
         const lang = LANGS[overlay.index]
         dispatchOverlay({ type: 'close' })

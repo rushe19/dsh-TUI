@@ -335,7 +335,7 @@ one-column seam between the two surfaces.
 ## 3. Command reference
 
 The command menu = built-in commands (aliases included) + DSH registry commands (`/plan` `/goal` etc.) + the skill catalog
-(completion only, hidden from the `/help` menu). `/lang` switches the UI and command descriptions between English and Chinese.
+(completion only, hidden from the `/help` menu). `/lang` switches the UI and command descriptions between English, Chinese, and Japanese.
 
 ### 3.1 Session
 
@@ -392,7 +392,7 @@ The command menu = built-in commands (aliases included) + DSH registry commands 
 | `/preset` | `<id>` / `status` | agent preset: `standard` / `ptc` (old 0.1.1 name `code`) / `minimal` / `cordis` / **Liangshen mode `liangshen`**; **cannot switch an already-started session**. Persisted to `~/.dsh-tui/agent-preset.json` |
 | `/theme` | `<名字>` / `status` | theme: no-arg selector; `<名字>` switch directly; `status` current theme (auto appends the OSC 11 result). Persisted to `~/.dsh-tui/theme.json` |
 | `/color` | no-arg / `<名>` / `status` / `reset` | session accent color: no-arg opens the palette (`↑/↓` pick, `Enter` apply); `<名>` set directly; `reset` back to default. Colors `red/orange/yellow/green/blue/purple/pink/cyan`, saved per session |
-| `/lang` | `en` / `zh` / `status` | hot-switch UI language. Priority: `DSH_TUI_LANG` > profile config (legacy: settings.yaml user layer > cordis.yml) > persisted |
+| `/lang` | `en` / `zh` / `ja` / `status` | hot-switch UI language. Priority: `DSH_TUI_LANG` > profile config (legacy: settings.yaml user layer > cordis.yml) > persisted |
 | `/vim` | none | **vim editing mode toggle** (see §2.4): input switches to vim keys, per-session, not persisted |
 | `/panel` | `toggle` / `focus` / `zoom` / `<panel id>` | side panel: toggle / focus / zoom / switch panels; states and subcommands in §2.8 |
 
@@ -628,7 +628,7 @@ Common items below, full list on the /settings screen. Most topics (**Appearance
 
 | Field | Notes |
 |---|---|
-| lang | UI language zh/en (locked when DSH_TUI_LANG is pinned) |
+| lang | UI language zh/en/ja (locked when DSH_TUI_LANG is pinned) |
 | fullscreen | fullscreen mode (default on); takes effect after `/restart` |
 | launchpad | launchpad landing page (default on): an ordinary launch starts on the launchpad where the first sentence gets typed; off boots straight into the chat page (launches with a `--resume` target are unaffected — they open their conversation directly either way). Takes effect after `/restart` |
 | minimal | Minimal UI (default off): hide the header splash, emoji glyphs and decorative colors, and trim the footer to model + cwd; code highlight and tool colors stay. **An interface switch** with no effect on model capability — do not confuse it with the kernel Minimal agent preset in `/preset` |
@@ -710,7 +710,7 @@ When dsh exits unexpectedly, safe mode gives a **read-only** environment diagnos
 | Agent preset | `/preset` | `standard` / `ptc` (old 0.1.1 name `code`) / `minimal` / `cordis` / **Liangshen mode `liangshen`**; **can't switch an already-started session** |
 | Theme | `/theme` | `auto` (OSC 11 follows terminal background) / `light` / `dark` / `dark-ansi` / `pink-day` / `pink-night` / `pink-ansi`; `/theme <名>` direct; `/theme status` for the result |
 | Custom theme | manual | `~/.dsh-tui/themes/<名>.json`, `{base, colors}` format, hot-swap on select; naming it `auto` gets shadowed by the built-in |
-| Language | `/lang` | `en` / `zh` hot switch; priority `DSH_TUI_LANG` > profile config (legacy: settings.yaml user layer > cordis.yml) > persisted |
+| Language | `/lang` | `en` / `zh` / `ja` hot switch; priority `DSH_TUI_LANG` > profile config (legacy: settings.yaml user layer > cordis.yml) > persisted |
 | Status animation | `/activity` | selector or `/activity frames <名>`; default `moon8`, `random` randomizes |
 
 **Theme priority**: `DSH_TUI_THEME` > `~/.dsh-tui/theme.json` > OSC 11 terminal-background detection > dark fallback.
@@ -736,7 +736,7 @@ When dsh exits unexpectedly, safe mode gives a **read-only** environment diagnos
 
 1. `?` for shortcuts, `/` for commands — both have Tab completion.
 2. Not sure the environment is right? Run `/doctor`; for the whole session, `/status`.
-3. Switch UI language `/lang en|zh`, applies immediately and persists.
+3. Switch UI language `/lang en|zh|ja`, applies immediately and persists.
 
 **Efficiency**
 

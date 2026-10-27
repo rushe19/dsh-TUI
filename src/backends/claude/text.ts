@@ -19,12 +19,14 @@ import type { BackendLocale } from '../../agent/backend.js'
 import type { ElicitationText } from '../shared/elicitation.js'
 import { fillTemplate, pickLocalizedText, type LocalizedText, type TextParams } from '../shared/localized-text.js'
 import { pickPlatformText } from '../shared/platform-text.js'
+import { CLAUDE_TEXT_JA } from './text.ja.js'
 
 /**
- * Every string of this backend. `zh` and `en` are both required
- * (`scripts/verify-i18n.ts` checks the same invariants the host dictionary
- * gets: language completeness, placeholder parity, single-brace typos, and
- * that no key here is dead).
+ * Every string of this backend. `zh` and `en` are both required; `ja` lives
+ * beside this file (`text.ja.ts`, merged into the views below) so upstream
+ * zh/en edits stay conflict-free (`scripts/verify-i18n.ts` checks the same
+ * invariants the host dictionary gets: language completeness, placeholder
+ * parity, single-brace typos, and that no key here is dead).
  */
 const texts = {
   'claude-permission-denied': { zh: '{{tool}} 被权限规则拒绝', en: '{{tool}} was denied by a permission rule' },
@@ -236,8 +238,15 @@ const texts = {
 } as const satisfies Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText }>
 
 /** Read-only view of {@link texts} for audits (scripts/verify-i18n.ts and the
- *  backend's own gates), mirroring `i18nDict` on the host side. */
-export const claudeTexts: Readonly<Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText }>> = texts
+ *  backend's own gates), mirroring `i18nDict` on the host side: every entry
+ *  carries zh/en, and ja merged in from `text.ja.ts` (or the platform text). */
+export const claudeTexts: Readonly<Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText; readonly ja?: LocalizedText }>> =
+  Object.fromEntries(
+    Object.entries(texts).map(([key, entry]) => [
+      key,
+      { ...entry, ja: CLAUDE_TEXT_JA[key] ?? ('ja' in entry ? entry.ja : undefined) },
+    ]),
+  )
 
 /** A key of {@link texts}; a typo is a compile error. */
 export type ClaudeTextKey = keyof typeof texts
@@ -270,7 +279,12 @@ export function claudeLocale(): BackendLocale {
  */
 export function claudeTemplate(key: ClaudeTextKey, params: ClaudeTextParams = {}): string {
   const locale = localeSource()
-  return pickLocalizedText(texts[key][locale], locale, params) ?? key
+  const entry = texts[key]
+  if (locale === 'ja') {
+    const ja = CLAUDE_TEXT_JA[key] ?? ('ja' in entry ? entry.ja : undefined)
+    return pickLocalizedText(ja, 'ja', params) ?? pickLocalizedText(entry.en, 'en', params) ?? key
+  }
+  return pickLocalizedText(entry[locale], locale, params) ?? key
 }
 
 /** One string of this backend in the active language. */

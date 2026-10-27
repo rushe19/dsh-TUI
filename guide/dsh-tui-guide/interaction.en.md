@@ -297,7 +297,7 @@ Click a staged `[Image #N]` token or a transcript thumbnail to open one shared, 
 
 ## Interface language
 
-`/lang` toggles the UI between Simplified Chinese and English (affects all UI strings); the choice persists across restarts (0.3.7+).
+`/lang` switches the UI between Simplified Chinese, English, and Japanese (affects all UI strings); the choice persists across restarts (0.3.7+).
 
 - The **dsh-tui → Language** select in `/settings` switches it too: applies immediately and saves `dsh-tui.lang` in the active profile config (`~/.dsh/settings.yaml` on older hosts).
 - The `DSH_TUI_LANG` env var always wins.

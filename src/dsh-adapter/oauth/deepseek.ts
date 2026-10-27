@@ -118,7 +118,7 @@ const tuiVersion = (() => {
 export function deepSeekClientMetadata(): AccountClientMetadata {
   return {
     version: tuiVersion,
-    locale: getLang() === 'zh' ? 'zh-CN' : 'en-US',
+    locale: getLang() === 'zh' ? 'zh-CN' : getLang() === 'ja' ? 'ja-JP' : 'en-US',
     timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
   }
 }

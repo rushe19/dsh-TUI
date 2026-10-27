@@ -22,11 +22,14 @@ import type { BackendLocale } from '../../agent/backend.js'
 import type { ElicitationText } from '../shared/elicitation.js'
 import { fillTemplate, type LocalizedText, type TextParams } from '../shared/localized-text.js'
 import { pickPlatformText } from '../shared/platform-text.js'
+import { CODEX_TEXT_JA } from './text.ja.js'
 
 /**
- * Every string of this backend. `zh` and `en` are both required
- * (`scripts/verify-i18n.ts` checks the same invariants the host dictionary
- * gets: language completeness, placeholder parity and single-brace typos).
+ * Every string of this backend. `zh` and `en` are both required; `ja` lives
+ * beside this file (`text.ja.ts`, merged into the views below) so upstream
+ * zh/en edits stay conflict-free (`scripts/verify-i18n.ts` checks the same
+ * invariants the host dictionary gets: language completeness, placeholder
+ * parity and single-brace typos).
  */
 const texts = {
   // ── Approvals, notices, status lines and control answers ──
@@ -259,8 +262,15 @@ const texts = {
 } as const satisfies Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText }>
 
 /** Read-only view of {@link texts} for audits (`scripts/verify-i18n.ts` and the
- *  backend's own gates), mirroring `i18nDict` on the host side. */
-export const codexTexts: Readonly<Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText }>> = texts
+ *  backend's own gates), mirroring `i18nDict` on the host side: every entry
+ *  carries zh/en, and ja merged in from `text.ja.ts` (or the platform text). */
+export const codexTexts: Readonly<Record<string, { readonly zh: LocalizedText; readonly en: LocalizedText; readonly ja?: LocalizedText }>> =
+  Object.fromEntries(
+    Object.entries(texts).map(([key, entry]) => [
+      key,
+      { ...entry, ja: CODEX_TEXT_JA[key] ?? ('ja' in entry ? entry.ja : undefined) },
+    ]),
+  )
 
 /** A key of {@link texts}; a typo is a compile error. */
 export type CodexTextKey = keyof typeof texts
@@ -287,7 +297,14 @@ export function codexLocale(): BackendLocale {
  *  the elicitation flow fills its own placeholders (see
  *  {@link codexElicitationText}). */
 export function codexTemplate(key: CodexTextKey): string {
-  return texts[key][codexLocale()]
+  const entry = texts[key]
+  const locale = codexLocale()
+  if (locale === 'ja') {
+    const ja = CODEX_TEXT_JA[key] ?? ('ja' in entry ? entry.ja : undefined)
+    if (typeof ja === 'string') return ja
+    return entry.en
+  }
+  return entry[locale]
 }
 
 /**

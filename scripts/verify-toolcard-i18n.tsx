@@ -1,7 +1,7 @@
 /**
  * Tool-card i18n regression (issue #980): the card cluster —
  * AssistantToolUseMessage + SplitDiffView — must render every piece of
- * interface copy through the i18n dictionary in BOTH shipped languages:
+ * interface copy through the i18n dictionary in every shipped language:
  * tool display names, per-line fold hints, exit/signal error lines, the
  * running placeholder, and search-result truncation. These used to be
  * hardcoded English that leaked into the zh UI.
@@ -11,8 +11,8 @@
  * this fixture proves the RENDERED output actually localizes — a t() call
  * that is never reached, or keyed to the wrong entry, still fails here.
  *
- * zh is pinned below (the shipping default); the en pass switches via
- * setLang() and remounts every scenario with a fresh key so memos
+ * zh is pinned below (the shipping default); the en and ja passes switch via
+ * setLang() and remount every scenario with a fresh key so memos
  * (foldTerminalTitle caches by title ref + lang) re-resolve.
  *
  * Exits non-zero on any failed assertion (CI convention).
@@ -68,6 +68,7 @@ type Scenario = {
   opts?: { foldTerminalCommand?: boolean }
   zh: string[]
   en: string[]
+  ja: string[]
 }
 
 // Interface copy only — model/protocol-produced text (titles like
@@ -78,24 +79,28 @@ const SCENARIOS: Scenario[] = [
     tool: { name: 'read', argsText: '{"file_path":"/tmp/a.ts"}' },
     zh: ['读取({"file_path"'],
     en: ['Read({"file_path"'],
+    ja: ['Read({"file_path"'],
   },
   {
     id: 'name-bash-proper-noun',
     tool: { name: 'bash', callView: { card: 'terminal', title: 'ls' }, resultView: { card: 'terminal', output: 'ok', exitCode: 0 }, resultFull: 'ok' },
     zh: ['Bash(ls)'],
     en: ['Bash(ls)'],
+    ja: ['Bash(ls)'],
   },
   {
     id: 'name-unmapped-fallback',
     tool: { name: 'frobnicate', argsText: '{"x":1}' },
     zh: ['Frobnicate'],
     en: ['Frobnicate'],
+    ja: ['Frobnicate'],
   },
   {
     id: 'body-fold-hint',
     tool: { name: 'read', resultFull: 'l1\nl2\nl3\nl4\nl5' },
     zh: ['… +2 行（ctrl+o 展开）'],
     en: ['… +2 lines (ctrl+o to expand)'],
+    ja: ['… +2 行（ctrl+o で展開）'],
   },
   {
     id: 'terminal-title-fold-hint',
@@ -108,6 +113,7 @@ const SCENARIOS: Scenario[] = [
     opts: { foldTerminalCommand: true },
     zh: ['Bash(cd /tmp)', '… +2 行（ctrl+o 展开）'],
     en: ['Bash(cd /tmp)', '… +2 lines (ctrl+o to expand)'],
+    ja: ['Bash(cd /tmp)', '… +2 行（ctrl+o で展開）'],
   },
   {
     id: 'exit-code-line',
@@ -119,6 +125,7 @@ const SCENARIOS: Scenario[] = [
     },
     zh: ['退出码 1'],
     en: ['Exit code 1'],
+    ja: ['終了コード 1'],
   },
   {
     id: 'signal-line',
@@ -130,12 +137,14 @@ const SCENARIOS: Scenario[] = [
     },
     zh: ['被信号 SIGKILL 终止'],
     en: ['Killed by signal SIGKILL'],
+    ja: ['シグナル SIGKILL で終了'],
   },
   {
     id: 'running-placeholder',
     tool: { name: 'read', status: 'running', startedAt: Date.now() - 4000 },
     zh: ['运行中…（'],
     en: ['Running… ('],
+    ja: ['実行中…（'],
   },
   {
     id: 'search-total',
@@ -147,6 +156,7 @@ const SCENARIOS: Scenario[] = [
     },
     zh: ['…（共 7 条）'],
     en: ['… (7 total)'],
+    ja: ['…（合計 7 件）'],
   },
 ]
 
@@ -185,7 +195,7 @@ const splitApp = await render(
   { stdout: splitRig.stdout, debug: true, exitOnCtrlC: false, patchConsole: false },
 )
 
-async function runPass(lang: 'zh' | 'en') {
+async function runPass(lang: 'zh' | 'en' | 'ja') {
   setLang(lang)
   for (const scenario of SCENARIOS) {
     app.rerender(React.createElement(AssistantToolUseMessage, {
@@ -205,15 +215,24 @@ async function runPass(lang: 'zh' | 'en') {
     marginTopOnTurn: false,
     verbose: false,
   }))
-  const splitExpected = lang === 'zh' ? '行（ctrl+o 展开）' : 'lines (ctrl+o to expand)'
+  const splitHint = {
+    zh: '行（ctrl+o 展开）',
+    en: 'lines (ctrl+o to expand)',
+    ja: '行（ctrl+o で展開）',
+  } as const
+  const splitExpected = splitHint[lang]
   check(`[${lang}] split-diff 隐藏行提示本地化`, await settled(() => screenOf(splitRig.term).includes(splitExpected)))
-  // The other language's copy must never leak into this pass's screen.
-  const splitForbidden = lang === 'zh' ? 'lines (ctrl+o' : '行（ctrl+o'
-  check(`[${lang}] split-diff 无对方语言残留`, !screenOf(splitRig.term).includes(splitForbidden))
+  // The other languages' copy must never leak into this pass's screen.
+  const splitForbidden = (Object.keys(splitHint) as Array<keyof typeof splitHint>)
+    .filter(other => other !== lang)
+    .map(other => splitHint[other])
+  check(`[${lang}] split-diff 无对方语言残留`,
+    splitForbidden.every(hint => !screenOf(splitRig.term).includes(hint)))
 }
 
 await runPass('zh')
 await runPass('en')
+await runPass('ja')
 
 // Header accent split (same card cluster; not i18n): the leading word carries
 // the tool tone, and a title written as `Name(args)` — the terminal card's

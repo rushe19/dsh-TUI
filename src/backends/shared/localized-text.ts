@@ -26,11 +26,12 @@ export function fillTemplate(template: string, params: TextParams): string {
   )
 }
 
-// CLDR-backed and built into Node: zh always selects `other` (the language has
-// no grammatical number), en selects `one` exactly at 1.
+// CLDR-backed and built into Node: zh and ja always select `other` (neither
+// language has grammatical number), en selects `one` exactly at 1.
 const pluralRules: Record<BackendLocale, Intl.PluralRules> = {
   zh: new Intl.PluralRules('zh'),
   en: new Intl.PluralRules('en'),
+  ja: new Intl.PluralRules('ja'),
 }
 
 /**

@@ -13,6 +13,7 @@ import type { TuiSettingsField } from '../adapter/ports/channel-settings.js'
 import { SPLASH_FONT_OPTIONS } from '../components/splashFonts.js'
 import { BRAND_SETTING_OPTIONS } from '../branding.js'
 import type { ShortcutActionId } from '../utils/keymap.js'
+import { applySettingsJa } from './definitions.ja.js'
 
 export type SettingDefinition = Pick<TuiSettingsField, 'label' | 'descriptions' | 'hint' | 'hintDescriptions' | 'kind' | 'group' | 'options'>
 
@@ -150,6 +151,7 @@ export const SETTING_DEFINITIONS = {
     options: [
       { value: 'zh', label: '中文', descriptions: { zh: '中文' } },
       { value: 'en', label: 'English', descriptions: { zh: '英文' } },
+      { value: 'ja', label: '日本語', descriptions: { zh: '日文' } },
     ],
   },
   'launchpad': {
@@ -584,6 +586,14 @@ export const SETTING_GROUPS = [
   { id: 'shortcuts', mode: 'page', title: 'Shortcuts', descriptions: { zh: '快捷键' } },
 ] as const
 
+// Japanese copy (definitions.ja.ts) merged once at module load: the zh/en
+// literals above stay the canonical declaration, ja rides along like the
+// backend dictionaries do. Missing ja keys fall back to the en label/hint.
+applySettingsJa(
+  SETTING_DEFINITIONS as unknown as Parameters<typeof applySettingsJa>[0],
+  SETTING_GROUPS as unknown as Parameters<typeof applySettingsJa>[1],
+)
+
 /**
  * Top-level Config keys the settings service may edit at runtime: every
  * defined setting's root, plus the shortcut remaps. Keys without a Config
@@ -603,119 +613,157 @@ export function settingField(key: SettingKey): SettingDefinition & { path: reado
  * Shortcut remap fields (`shortcuts.<action>`): one per SHORTCUT_ACTIONS
  * entry; the help text names the platform's default combos.
  */
-export const SHORTCUT_FIELD_META: Record<ShortcutActionId, { label: string; zh: string; hintEn: (defaults: string) => string; hintZh: (defaults: string) => string }> = {
+export const SHORTCUT_FIELD_META: Record<ShortcutActionId, { label: string; zh: string; ja: string; hintEn: (defaults: string) => string; hintZh: (defaults: string) => string; hintJa: (defaults: string) => string }> = {
   paste: {
     label: 'Paste shortcut',
     zh: '粘贴快捷键',
+    ja: '貼り付けショートカット',
     hintEn: d => `Clipboard paste (text, file paths, images). Default: ${d}. Alt+V works where the terminal eats Ctrl+V.`,
     hintZh: d => `剪贴板粘贴（文本、文件路径、图片）。默认 ${d}。终端吞掉 Ctrl+V 时可用 Alt+V。`,
+    hintJa: d => `クリップボードから貼り付け（テキスト・ファイルパス・画像）。既定 ${d}。端末が Ctrl+V を奪う場面では Alt+V が使えます。`,
   },
   history: {
     label: 'History search shortcut',
     zh: '历史搜索快捷键',
+    ja: '履歴検索ショートカット',
     hintEn: d => `Open the prompt-history search. Default: ${d}.`,
     hintZh: d => `打开输入历史搜索。默认 ${d}。`,
+    hintJa: d => `入力履歴の検索を開きます。既定 ${d}。`,
   },
   editor: {
     label: 'External editor shortcut',
     zh: '外部编辑器快捷键',
+    ja: '外部エディタショートカット',
     hintEn: d => `Edit the draft in $VISUAL/$EDITOR. Default: ${d}.`,
     hintZh: d => `在 $VISUAL/$EDITOR 外部编辑器中编辑草稿。默认 ${d}。`,
+    hintJa: d => `$VISUAL/$EDITOR の外部エディタで下書きを編集します。既定 ${d}。`,
   },
   transcript: {
     label: 'Transcript mode shortcut',
     zh: '转录模式快捷键',
+    ja: 'トランスクリプトモードショートカット',
     hintEn: d => `Toggle expanded transcript mode. Default: ${d}.`,
     hintZh: d => `切换展开转录模式。默认 ${d}。`,
+    hintJa: d => `展開トランスクリプトモードを切り替えます。既定 ${d}。`,
   },
   trajectory: {
     label: 'Trajectory scene shortcut',
     zh: '轨迹场景快捷键',
+    ja: '軌跡シーンショートカット',
     hintEn: d => `Open the trajectory scene. Default: ${d}.`,
     hintZh: d => `打开轨迹场景。默认 ${d}。`,
+    hintJa: d => `軌跡シーンを開きます。既定 ${d}。`,
   },
   dashboard: {
     label: 'Subagent dashboard shortcut',
     zh: '子代理面板快捷键',
+    ja: 'サブエージェントパネルショートカット',
     hintEn: d => `Open the subagent dashboard. Default: ${d}.`,
     hintZh: d => `打开子代理面板。默认 ${d}。`,
+    hintJa: d => `サブエージェントダッシュボードを開きます。既定 ${d}。`,
   },
   contextPanel: {
     label: 'Loaded-context panel shortcut',
     zh: '加载上下文面板快捷键',
+    ja: '読み込み済みコンテキストパネルショートカット',
     hintEn: d => `Toggle the startup loaded-context panel. Default: ${d}.`,
     hintZh: d => `切换启动时的已加载上下文面板。默认 ${d}。`,
+    hintJa: d => `起動時の読み込み済みコンテキストパネルを切り替えます。既定 ${d}。`,
   },
   continue: {
     label: 'Continue last session shortcut',
     zh: '继续上次会话快捷键',
+    ja: '前回セッション継続ショートカット',
     hintEn: d => `On the launchpad, resume the most recent session. Default: ${d}. Only bound while the launchpad is up.`,
     hintZh: d => `在启动页上继续最近一条会话。默认 ${d}。仅在启动页生效。`,
+    hintJa: d => `ランチパッドで最新のセッションを再開します。既定 ${d}。ランチパッド表示中のみ有効。`,
   },
   showAll: {
     label: 'Show-all shortcut',
     zh: '显示全部消息快捷键',
+    ja: '全メッセージ表示ショートカット',
     hintEn: d => `Toggle show-all-messages. Default: ${d}.`,
     hintZh: d => `切换显示全部消息。默认 ${d}。`,
+    hintJa: d => `全メッセージ表示を切り替えます。既定 ${d}。`,
   },
   redraw: {
     label: 'Redraw shortcut',
     zh: '终端重绘快捷键',
+    ja: '端末再描画ショートカット',
     hintEn: d => `Clear and repaint the terminal. Default: ${d}.`,
     hintZh: d => `清空并重绘终端。默认 ${d}。`,
+    hintJa: d => `端末を消して再描画します。既定 ${d}。`,
   },
   todoFold: {
     label: 'Todo fold shortcut',
     zh: '待办折叠快捷键',
+    ja: 'TODO 折りたたみショートカット',
     hintEn: d => `Fold running todos; hide/restore the idle goal/todo footer. Default: ${d}.`,
     hintZh: d => `运行时折叠待办，空闲时隐藏/恢复目标与待办底部面板。默认 ${d}。`,
+    hintJa: d => `実行中は TODO を折りたたみ、アイドル時は Goal/TODO のフッターを隠します。既定 ${d}。`,
   },
   questionFold: {
     label: 'Question panel fold shortcut',
     zh: '提问面板折叠快捷键',
+    ja: '質問パネル折りたたみショートカット',
     hintEn: d => `Fold/unfold the pending question panel. Default: ${d}.`,
     hintZh: d => `折叠/展开等待回答的提问面板。默认 ${d}。`,
+    hintJa: d => `回答待ちの質問パネルを折りたたみ/展開します。既定 ${d}。`,
   },
   questionDetailUp: {
     label: 'Panel preview previous page shortcut',
     zh: '面板正文向上翻页快捷键',
+    ja: 'パネル本文前ページショートカット',
     hintEn: d => `Page up through question text or a compact approval preview without moving the choice focus. Default: ${d}.`,
     hintZh: d => `向上翻阅问卷正文或紧凑审批预览，不移动选项焦点。默认 ${d}。`,
+    hintJa: d => `選択肢のフォーカスを動かさずに、質問本文やコンパクトな承認プレビューを前へ送ります。既定 ${d}。`,
   },
   questionDetailDown: {
     label: 'Panel preview next page shortcut',
     zh: '面板正文向下翻页快捷键',
+    ja: 'パネル本文次ページショートカット',
     hintEn: d => `Page down through question text or a compact approval preview without moving the choice focus. Default: ${d}.`,
     hintZh: d => `向下翻阅问卷正文或紧凑审批预览，不移动选项焦点。默认 ${d}。`,
+    hintJa: d => `選択肢のフォーカスを動かさずに、質問本文やコンパクトな承認プレビューを次へ送ります。既定 ${d}。`,
   },
   expandEditor: {
     label: 'Fullscreen editor shortcut',
     zh: '全屏草稿编辑快捷键',
+    ja: '全画面エディタショートカット',
     hintEn: d => `Toggle the fullscreen draft editor (Enter inserts a newline, Ctrl+Enter sends). Default: ${d}.`,
     hintZh: d => `切换全屏草稿编辑器（Enter 换行、Ctrl+Enter 发送）。默认 ${d}。`,
+    hintJa: d => `全画面下書きエディタを切り替えます（Enter 改行、Ctrl+Enter 送信）。既定 ${d}。`,
   },
   star: {
     label: 'One-key star shortcut',
     zh: '一键 star 快捷键',
+    ja: 'ワンタップ star ショートカット',
     hintEn: d => `Star the project via the gh CLI (same action as /star and the splash line's click). Default: ${d}.`,
     hintZh: d => `用 gh 给项目点 star（与 /star、开屏标语点击同一个动作）。默认 ${d}。`,
+    hintJa: d => `gh CLI でプロジェクトに star を付けます（/star やスプラッシュ標語のクリックと同一動作）。既定 ${d}。`,
   },
   undo: {
     label: 'Draft undo shortcut',
     zh: '草稿撤销快捷键',
+    ja: '下書き取り消しショートカット',
     hintEn: d => `Undo the prompt draft one word-level step at a time (text, caret and images together). Draft-only: submitted or history-recalled text is out of scope (Esc Esc rewinds turns, Ctrl+R recalls history). Default: ${d}.`,
     hintZh: d => `按词撤销输入框草稿（文本、光标、图片一起回退）。只作用于草稿：提交或用历史召回后不可撤销；与 Esc Esc 回溯、Ctrl+R 历史召回不是一回事。默认 ${d}。`,
+    hintJa: d => `入力ボックスの下書きを語単位で取り消します（テキスト・カーソル・画像が一緒に戻る）。下書きのみが対象：送信済みや履歴呼び出し後のテキストは対象外（Esc Esc がターン巻き戻し、Ctrl+R が履歴呼び出し）。既定 ${d}。`,
   },
   sidePanel: {
     label: 'Side panel shortcut',
     zh: '侧栏快捷键',
+    ja: 'サイドパネルショートカット',
     hintEn: d => `Smart three-state sidebar toggle: closed → open+focus → focus chat → closed. Default: ${d}. tmux users should remap it (the prefix eats Ctrl+B).`,
     hintZh: d => `侧栏智能三态：关闭 → 打开并聚焦 → 焦点回聊天 → 关闭。默认 ${d}。tmux 用户请改键（前缀会吞掉它）。`,
+    hintJa: d => `サイドバーのスマート三状態切替：閉じる → 開く+フォーカス → チャットへフォーカス → 閉じる。既定 ${d}。tmux ユーザーは割り当て変更を（プレフィックスが Ctrl+B を奪います）。`,
   },
   sidePanelZoom: {
     label: 'Side panel zoom shortcut',
     zh: '侧栏缩放快捷键',
+    ja: 'サイドパネルズームショートカット',
     hintEn: d => `Zoom the active side panel (chat keeps its minimum width). Default: ${d}.`,
     hintZh: d => `缩放当前侧栏面板（聊天列保留最小宽度）。默认 ${d}。`,
+    hintJa: d => `アクティブなサイドパネルをズームします（チャット列は最小幅を保持）。既定 ${d}。`,
   },
 }

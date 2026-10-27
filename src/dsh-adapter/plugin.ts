@@ -1473,7 +1473,7 @@ export async function apply(ctx: Context, runtimeConfig: RuntimeConfig<Config>, 
         // No default on purpose: an unset `lang` keeps the field showing
         // the effective language (see the section's format below) and lets
         // cordis.yml / lang.json keep their precedence.
-        lang: Schema.union(['zh', 'en']),
+        lang: Schema.union(['zh', 'en', 'ja']),
         // Same no-default rule: unset keeps cordis.yml's `fullscreen`
         // decisive; set overrides it from the next boot on.
         fullscreen: Schema.boolean(),
@@ -1497,7 +1497,7 @@ export async function apply(ctx: Context, runtimeConfig: RuntimeConfig<Config>, 
     )
     type SettingsValue = {
       diffLayout?: 'auto' | 'split' | 'unified'
-      lang?: 'zh' | 'en'
+      lang?: 'zh' | 'en' | 'ja'
       whale?: boolean
       whaleIdle?: boolean
       whaleGirl?: boolean
@@ -1780,9 +1780,9 @@ export async function apply(ctx: Context, runtimeConfig: RuntimeConfig<Config>, 
     return {
       path: ['shortcuts', action.id],
       label: meta.label,
-      descriptions: { zh: meta.zh },
+      descriptions: { zh: meta.zh, ja: meta.ja },
       hint: meta.hintEn(defaults),
-      hintDescriptions: { zh: meta.hintZh(defaults) },
+      hintDescriptions: { zh: meta.hintZh(defaults), ja: meta.hintJa(defaults) },
       group: 'shortcuts',
       kind: 'text',
       format(value: unknown): string {
@@ -1832,14 +1832,17 @@ export async function apply(ctx: Context, runtimeConfig: RuntimeConfig<Config>, 
         {
           ...settingField('terminalImages'),
           label: terminalImagesDisabledByEnv ? 'Image previews (forced off)' : 'Terminal image previews',
-          descriptions: { zh: terminalImagesDisabledByEnv ? '图片预览（环境强制关闭）' : '终端图片预览' },
+          descriptions: { zh: terminalImagesDisabledByEnv ? '图片预览（环境强制关闭）' : '终端图片预览', ja: terminalImagesDisabledByEnv ? '画像プレビュー（環境により強制オフ）' : '端末画像プレビュー' },
           hint: terminalImagesDisabledByEnv
             ? 'Checkbox saves your preference. Relaunch without DSH_TUI_DISABLE_TERMINAL_IMAGES to enable previews.'
             : 'Preview images in supported terminals. Use /restart to apply. Sending images is unaffected.',
           hintDescriptions: {
             zh: terminalImagesDisabledByEnv
-              ? '勾选框保存预览偏好；移除 DSH_TUI_DISABLE_TERMINAL_IMAGES 后重新启动才能显示图片。'
+              ? '勾选即保存偏好。移除 DSH_TUI_DISABLE_TERMINAL_IMAGES 后重新启动才会显示图片。'
               : '在支持的终端中预览图片。修改后用 /restart 生效；不影响向模型发送图片。',
+            ja: terminalImagesDisabledByEnv
+              ? 'チェックで設定を保存します。DSH_TUI_DISABLE_TERMINAL_IMAGES を外して再起動すると画像が表示されます。'
+              : '対応端末で画像をプレビューします。/restart で反映。画像の送信には影響しません。',
           },
           format(value: unknown): string {
             // The editor toggles this value; runtime overrides must not replace the preference.

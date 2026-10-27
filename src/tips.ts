@@ -673,8 +673,8 @@ export const TIPS: readonly Tip[] = [
   {
     id: 'disp-lang',
     group: 'display',
-    zh: '/lang zh|en 界面语言即时切换',
-    en: '/lang zh|en switches UI language instantly',
+    zh: '/lang zh|en|ja 界面语言即时切换',
+    en: '/lang zh|en|ja switches UI language instantly',
   },
   {
     id: 'disp-activity',

@@ -1,6 +1,7 @@
 import React from 'react'
 import { getLang, t as tr, tOr } from '../i18n.js'
 import { pickRandomTip, type Tip } from '../tips.js'
+import { TIP_JA } from '../tips.ja.js'
 import { upstreamDriftSummary, UPSTREAM_VALIDATED_VERSION, type UpstreamDriftSummary } from '../dsh-adapter/contract.js'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -437,7 +438,7 @@ export function LogoV2({
   // 英文是两行（\n 分隔）——渲染与居中都按行处理，见下方 welcomeWidth/渲染。
   const brandTagline = BRAND_TAGLINE[brand]
   const tagline = brand !== 'deepseek'
-    ? (getLang() === 'zh' ? brandTagline.zh : brandTagline.en)
+    ? (getLang() === 'zh' ? brandTagline.zh : getLang() === 'ja' ? brandTagline.ja : brandTagline.en)
     : tr('logo-tagline')
   /** 欢迎语逐行拆开（单行文案就是一元素）。 */
   const taglineLines = tagline.split('\n')
@@ -728,7 +729,7 @@ export function LogoV2({
                 </Text>
                 <Text wrap="truncate-end">
                   <Text dimColor>{tr('logo-tip-prefix')}</Text>
-                  {getLang() === 'zh' ? randomTip.zh : randomTip.en}
+                  {getLang() === 'zh' ? randomTip.zh : getLang() === 'ja' ? TIP_JA[randomTip.id] ?? randomTip.en : randomTip.en}
                   <Text dimColor>{' · /tips ' + tr('logo-tip-more')}</Text>
                 </Text>
               </>

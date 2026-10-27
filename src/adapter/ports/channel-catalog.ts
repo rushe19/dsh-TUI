@@ -43,7 +43,7 @@ export interface LocalCommand {
   origin?: 'backend'
 }
 
-export type LocalizedDescriptions = Readonly<Partial<Record<'zh' | 'en', string>>>
+export type LocalizedDescriptions = Readonly<Partial<Record<'zh' | 'en' | 'ja', string>>>
 
 /**
  * A concrete completion row: the line Enter runs and the text Tab inserts — an

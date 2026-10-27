@@ -27,6 +27,7 @@ import type { LocalizedText } from './localized-text.js'
 export interface PlatformTextEntry {
   readonly zh: LocalizedText
   readonly en: LocalizedText
+  readonly ja: LocalizedText
 }
 
 /**
@@ -37,16 +38,16 @@ export interface PlatformTextEntry {
  * annotation, which would collapse that union to `string`.
  */
 export const PLATFORM_TEXT = Object.freeze({
-  'capability-failed': Object.freeze({ zh: '{{name}} 失败 · {{err}}', en: '{{name}} failed · {{err}}' }),
-  'status-rate-limit-five-hour': Object.freeze({ zh: '5小时', en: '5h' }),
-  'status-rate-limit-seven-day': Object.freeze({ zh: '7天', en: '7d' }),
-  'doctor-unknown': Object.freeze({ zh: '未知', en: 'unknown' }),
-  'effort-invalid': Object.freeze({ zh: '未知推理等级 {{id}}（当前模型可选：{{ids}}）', en: 'Unknown reasoning effort {{id}} (this model offers: {{ids}})' }),
-  'tool-name-bash': Object.freeze({ zh: 'Bash', en: 'Bash' }),
-  'tool-name-edit': Object.freeze({ zh: '编辑', en: 'Edit' }),
-  'rewind-first-message': Object.freeze({ zh: '不能回退到第一条消息之前', en: 'Cannot rewind past the very first message' }),
-  'rename-failed': Object.freeze({ zh: '重命名失败 · {{err}}', en: 'Rename failed · {{err}}' }),
-  'rename-usage': Object.freeze({ zh: '用法  /rename <新名称>', en: 'Usage  /rename <new title>' }),
+  'capability-failed': Object.freeze({ zh: '{{name}} 失败 · {{err}}', en: '{{name}} failed · {{err}}', ja: '{{name}} に失敗しました · {{err}}' }),
+  'status-rate-limit-five-hour': Object.freeze({ zh: '5小时', en: '5h', ja: '5時間' }),
+  'status-rate-limit-seven-day': Object.freeze({ zh: '7天', en: '7d', ja: '7日' }),
+  'doctor-unknown': Object.freeze({ zh: '未知', en: 'unknown', ja: '不明' }),
+  'effort-invalid': Object.freeze({ zh: '未知推理等级 {{id}}（当前模型可选：{{ids}}）', en: 'Unknown reasoning effort {{id}} (this model offers: {{ids}})', ja: '不明な推論強度 {{id}} です（このモデルの選択肢: {{ids}}）' }),
+  'tool-name-bash': Object.freeze({ zh: 'Bash', en: 'Bash', ja: 'Bash' }),
+  'tool-name-edit': Object.freeze({ zh: '编辑', en: 'Edit', ja: '編集' }),
+  'rewind-first-message': Object.freeze({ zh: '不能回退到第一条消息之前', en: 'Cannot rewind past the very first message', ja: '最初のメッセージより前には戻れません' }),
+  'rename-failed': Object.freeze({ zh: '重命名失败 · {{err}}', en: 'Rename failed · {{err}}', ja: '名前の変更に失敗しました · {{err}}' }),
+  'rename-usage': Object.freeze({ zh: '用法  /rename <新名称>', en: 'Usage  /rename <new title>', ja: '使い方: /rename <新しいタイトル>' }),
 } satisfies Record<string, PlatformTextEntry>)
 
 /** A key of {@link PLATFORM_TEXT}; a typo is a compile error. */

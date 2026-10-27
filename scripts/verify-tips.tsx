@@ -12,11 +12,12 @@
  */
 process.env.FORCE_COLOR = '3'
 
-const [{ Writable, PassThrough }, React, { render }, tipsModule, i18nModule] = await Promise.all([
+const [{ Writable, PassThrough }, React, { render }, tipsModule, tipsJaModule, i18nModule] = await Promise.all([
   import('node:stream'),
   import('react'),
   import('../src/ui.js'),
   import('../src/tips.js'),
+  import('../src/tips.ja.js'),
   import('../src/i18n.js'),
 ])
 
@@ -59,6 +60,7 @@ const plainText = (frames: string[]) =>
     .replace(/\x1b\]9;[^\x07]*\x07/g, '')
 
 const { TIPS, TIP_GROUP_LABELS, pickRandomTip, tipsByGroup } = tipsModule
+const { TIP_GROUP_JA, TIP_JA } = tipsJaModule
 const groups = Object.keys(TIP_GROUP_LABELS)
 
 // ── 1. Data invariants ────────────────────────────────────────────────
@@ -70,9 +72,13 @@ for (const tip of TIPS) {
   if (!tip.zh || !tip.en) throw new Error(`tips: empty copy for ${tip.id}`)
   if ([...tip.zh].length > 60) throw new Error(`tips: zh too long (${tip.id}): ${tip.zh}`)
   if (tip.en.length > 100) throw new Error(`tips: en too long (${tip.id}): ${tip.en}`)
+  if (!TIP_JA[tip.id]) throw new Error(`tips: missing ja copy for ${tip.id}`)
   if (!groups.includes(tip.group)) throw new Error(`tips: unknown group ${tip.group} on ${tip.id}`)
 }
+const strayJa = Object.keys(TIP_JA).filter(id => !ids.has(id))
+if (strayJa.length > 0) throw new Error(`tips: ja copy for unknown ids: ${strayJa.join(', ')}`)
 for (const group of groups) {
+  if (!TIP_GROUP_JA[group as never]) throw new Error(`tips: missing ja group label for ${group}`)
   if (tipsByGroup(group as never).length < 2) throw new Error(`tips: group ${group} has too few tips`)
 }
 const first = pickRandomTip(() => 0)
@@ -84,8 +90,8 @@ if (pickRandomTip(() => 0.1) === pickRandomTip(() => 0.2)) {
 }
 console.log(`tips data OK (${TIPS.length} tips, ${groups.length} groups)`)
 
-// ── 2. TipsPanel renders all group headers and tip rows (zh + en) ─────
-for (const lang of ['zh', 'en'] as const) {
+// ── 2. TipsPanel renders all group headers and tip rows (zh + en + ja) ─
+for (const lang of ['zh', 'en', 'ja'] as const) {
   i18nModule.setLang(lang)
   const { TipsPanel } = await import('../src/components/TipsPanel.js')
   const stdout = new FakeStdout()
@@ -99,19 +105,19 @@ for (const lang of ['zh', 'en'] as const) {
   await new Promise(resolve => setTimeout(resolve, 150))
   const plain = plainText(stdout.frames)
   const groupLabel = TIP_GROUP_LABELS[groups[0] as never]
-  const expectedHeader = lang === 'zh' ? groupLabel.zh : groupLabel.en
+  const expectedHeader = lang === 'zh' ? groupLabel.zh : lang === 'ja' ? TIP_GROUP_JA[groups[0] as never] : groupLabel.en
   if (!plain.includes(expectedHeader)) throw new Error(`tips panel (${lang}): group header "${expectedHeader}" missing`)
   const sample = TIPS[0]!
-  const expectedTip = lang === 'zh' ? sample.zh : sample.en
+  const expectedTip = lang === 'zh' ? sample.zh : lang === 'ja' ? TIP_JA[sample.id]! : sample.en
   if (!plain.includes(expectedTip)) throw new Error(`tips panel (${lang}): tip row "${expectedTip}" missing`)
-  const hint = lang === 'zh' ? 'Esc 关闭' : 'Esc to close'
+  const hint = lang === 'zh' ? 'Esc 关闭' : lang === 'ja' ? 'Esc で閉じる' : 'Esc to close'
   if (!plain.includes(hint)) throw new Error(`tips panel (${lang}): hint line missing`)
   instance.unmount()
   console.log(`tips panel (${lang}) OK`)
 }
 
 // ── 3. LogoV2 settled header shows the daily tip + /tips pointer ──────
-for (const lang of ['zh', 'en'] as const) {
+for (const lang of ['zh', 'en', 'ja'] as const) {
   i18nModule.setLang(lang)
   const { LogoV2 } = await import('../src/components/LogoV2.js')
   const stdout = new FakeStdout()
@@ -128,7 +134,7 @@ for (const lang of ['zh', 'en'] as const) {
   await new Promise(resolve => setTimeout(resolve, 150))
   const plain = plainText(stdout.frames)
   const tip = pickRandomTip(() => 0)
-  const expectedTip = lang === 'zh' ? tip.zh : tip.en
+  const expectedTip = lang === 'zh' ? tip.zh : lang === 'ja' ? TIP_JA[tip.id]! : tip.en
   if (!plain.includes(expectedTip)) throw new Error(`logo (${lang}): random tip "${expectedTip}" missing`)
   if (!plain.includes('/tips')) throw new Error(`logo (${lang}): /tips pointer missing`)
   if (!plain.includes('dsh-TUI')) throw new Error(`logo (${lang}): wordmark missing`)

@@ -3,6 +3,7 @@ import { Box, Text, useInput, ScrollBox, type ScrollBoxHandle, useTerminalSize }
 import { getLang, t } from '../i18n.js'
 import { isPlainReturnInput } from '../utils/modifiers.js'
 import { TIPS, TIP_GROUP_LABELS, type TipGroup } from '../tips.js'
+import { TIP_GROUP_JA, TIP_JA } from '../tips.ja.js'
 
 const GROUP_ORDER: readonly TipGroup[] = ['keys', 'commands', 'workflow', 'display', 'pitfalls']
 
@@ -49,12 +50,12 @@ export function TipsPanel({ onClose }: { onClose: () => void }): React.ReactNode
             {GROUP_ORDER.map(group => (
               <Box key={group} flexDirection="column" marginBottom={1}>
                 <Text bold color="accent">
-                  {lang === 'zh' ? TIP_GROUP_LABELS[group].zh : TIP_GROUP_LABELS[group].en}
+                  {lang === 'zh' ? TIP_GROUP_LABELS[group].zh : lang === 'ja' ? TIP_GROUP_JA[group] : TIP_GROUP_LABELS[group].en}
                 </Text>
                 {TIPS.filter(tip => tip.group === group).map(tip => (
                   <Text key={tip.id} dimColor>
                     {'  · '}
-                    {lang === 'zh' ? tip.zh : tip.en}
+                    {lang === 'zh' ? tip.zh : lang === 'ja' ? TIP_JA[tip.id] ?? tip.en : tip.en}
                   </Text>
                 ))}
               </Box>

@@ -1,10 +1,10 @@
 /**
- * dsh-tui localization — UI strings for Chinese (`zh`, the default) and
- * English (`en`).
+ * dsh-tui localization — UI strings for Chinese (`zh`, the default), English
+ * (`en`), and Japanese (`ja`).
  *
  * Resolution order mirrors the `/theme` mechanism (see themePrefs.ts):
  *
- *   1. `DSH_TUI_LANG` env var (`en` / `zh`) — pinned at process start
+ *   1. `DSH_TUI_LANG` env var (`en` / `zh` / `ja`) — pinned at process start
  *   2. `lang` cordis.yml config key (see Config in index.ts)
  *   3. the persisted `/lang` choice in `~/.dsh-tui/lang.json`
  *   4. the OS locale guess (`LC_ALL` / `LC_MESSAGES` / `LANG`)
@@ -21,50 +21,34 @@
  * The dictionary shape is enforced at compile time (`satisfies` below):
  * every entry carries zh, and en is optional only for the `cmd-desc-*`
  * family whose en truth lives in the command registry (see {@link tOr}).
- * scripts/verify-i18n.ts adds the checks types cannot express: placeholder
- * parity between languages, single-brace typos, dead keys, and English
- * UI-copy literals outside the dictionary (issue #980's leak shape).
+ * ja is merged from `i18n.ja.ts` and verify-i18n requires it. That script
+ * adds the checks types cannot express: placeholder parity between languages,
+ * single-brace typos, dead keys, and English UI-copy literals outside the
+ * dictionary (issue #980's leak shape).
  *
- * ## Adding a language (e.g. `ja`) — the full checklist
+ * ## Japanese (`ja`)
  *
- * The architecture is the standard flat-dict shape; a new language is
- * translation work plus this mechanical touchpoint list (the compiler and
- * verify-i18n fail until every step is done — partial translations cannot
- * ship silently):
- *
- *   1. `Lang` union + `LANGS` display order (this file).
- *   2. `isLang()` — add the literal.
- *   3. `pluralRules` — add `new Intl.PluralRules('<tag>')`; if the language
- *      uses CLDR categories beyond one/other (ru/pl/ar…), widen `I18nText`
- *      to carry them and extend `pickText` accordingly.
- *   4. Dictionary type below: add `ja?: I18nText` to the `satisfies` shape.
- *      Decide optionality deliberately: required = compile error per missing
- *      key (recommended — a half-translated UI is worse than none); optional
- *      = `t()` renders the raw key for gaps, so also give `t()`/`tOr()` an
- *      explicit fallback order (e.g. ja → en → key) if you go optional.
- *   5. scripts/verify-i18n.ts: the completeness loop (§1) hardcodes the
- *      ['zh','en'] pair — extend it, and re-review FORBIDDEN_LITERALS
- *      (English sentences stay banned outside the dict; add the new
- *      language's equivalents only if the leak shape repeats).
- *   6. Translate the dictionary (~1k keys today); zh comments above each
- *      key family describe tone/register — keep them.
- *   7. `detectLocaleLang()` — map the new tag in the OS-locale guess.
- *   8. Rendered-output regression: extend scripts/verify-toolcard-i18n.tsx
- *      style fixtures' language passes so the localized strings are proven
- *      on screen, not just present in the dict.
+ * `ja` lives in `i18n.ja.ts` (`JA_TEXT`), merged into the dictionary below at
+ * load so upstream zh/en edits stay conflict-free. `t()`/`tOr()` fall back to
+ * `en` when one entry is absent. `scripts/verify-i18n.ts` requires every base
+ * key to carry `ja`, so the file must stay complete. Adding another language
+ * follows the same shape: extend `Lang` / `LANGS` / `isLang()` /
+ * `pluralRules` / `detectLocaleLang()`, add the optional field to the dict
+ * type and its merge, then extend verify-i18n's completeness loop.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { DATA_DIR } from './utils/paths.js'
 import { PLATFORM_TEXT } from './backends/shared/platform-text.js'
+import { JA_TEXT } from './i18n.ja.js'
 
-export type Lang = 'zh' | 'en'
+export type Lang = 'zh' | 'en' | 'ja'
 
 const PREFS_DIR = DATA_DIR
 
 /** The languages shipped with the plugin, in display order. */
-export const LANGS = ['zh', 'en'] as const
+export const LANGS = ['zh', 'en', 'ja'] as const
 
 /**
  * One dictionary value in one language: a plain `{{name}}` template, or
@@ -74,7 +58,7 @@ export const LANGS = ['zh', 'en'] as const
  */
 export type I18nText = string | { one: string; other: string }
 
-const dict = {
+const baseDict = {
   // ── 平台文案：真源在 src/backends/shared/platform-text.ts ────────────
   // 这 10 条是宿主界面与内置后端渲染的同一批字符串（状态行的速率窗口、
   // /doctor、/rename、回退、工具卡名）。真源放在后端中立缝里：后端读不到宿主
@@ -1143,6 +1127,7 @@ const dict = {
   // 二级补全子项描述（/lang /theme /effort /preset /activity 的 children）
   'sugg-status-desc': { zh: '显示当前选择', en: 'Show the current choice' },
   'sugg-lang-zh-desc': { zh: '切换界面语言到中文', en: 'Switch the UI language to Chinese' },
+  'sugg-lang-ja-desc': { zh: '将界面语言切换为日文', en: 'Switch the UI language to Japanese' },
   'sugg-lang-en-desc': { zh: '切换界面语言到英文', en: 'Switch the UI language to English' },
   'sugg-theme-auto-desc': { zh: '跟随终端背景自动切换', en: 'Follow the terminal background' },
   'sugg-theme-builtin-desc': { zh: '内置主题', en: 'Built-in theme' },
@@ -2544,6 +2529,7 @@ const dict = {
   'lang-switch-failed': { zh: '语言「{{lang}}」切换失败（无法写入 ~/.dsh-tui/lang.json）', en: 'Language "{{lang}}" switch failed (cannot write ~/.dsh-tui/lang.json)' },
   'lang-picker-title': { zh: '界面语言', en: 'UI language' },
   'lang-zh-desc': { zh: '简体中文（默认）', en: 'Simplified Chinese (default)' },
+  'lang-ja-desc': { zh: '日文', en: 'Japanese' },
   'lang-en-desc': { zh: 'English（英文）', en: 'English' },
 
   // ── screens/StatusLine.tsx ───────────────────────────────────────────
@@ -2908,6 +2894,16 @@ const dict = {
   'cmd-desc-setup': { zh: '重跑首次引导（API Key / 语言主题 / 模型工作区 / 快捷键）' },
 } as const satisfies Record<string, { zh: I18nText; en?: I18nText }>
 
+/** The shipped dictionary: zh/en live inline above, ja lives in i18n.ja.ts so
+ *  upstream dictionary edits stay merge-friendly. Missing ja falls back to en
+ *  inside t()/tOr(). */
+const dict = Object.fromEntries(
+  Object.entries(baseDict).map(([key, entry]) => [
+    key,
+    { ...entry, ja: JA_TEXT[key] ?? ('ja' in entry ? entry.ja : undefined) },
+  ]),
+) as { [K in keyof typeof baseDict]: (typeof baseDict)[K] & { ja?: I18nText } }
+
 export type I18nKey = keyof typeof dict
 export type I18nParams = Record<string, string | number>
 
@@ -2942,7 +2938,7 @@ export function setLang(lang: Lang): void {
 
 /** Is a string a valid shipped language code? */
 export function isLang(value: unknown): value is Lang {
-  return value === 'zh' || value === 'en'
+  return value === 'zh' || value === 'en' || value === 'ja'
 }
 
 /**
@@ -2954,7 +2950,8 @@ export function isLang(value: unknown): value is Lang {
  */
 export function t(key: I18nKey, params: I18nParams = {}): string {
   const entry = dict[key] as Partial<Record<Lang, I18nText>> | undefined
-  return substitute(pickText(entry?.[activeLang], params) ?? key, params)
+  const text = entry?.[activeLang] ?? (activeLang === 'ja' ? entry?.en : undefined)
+  return substitute(pickText(text, params) ?? key, params)
 }
 
 // Cached per shipped language; CLDR-backed and built into Node, so zh always
@@ -2962,6 +2959,7 @@ export function t(key: I18nKey, params: I18nParams = {}): string {
 const pluralRules: Record<Lang, Intl.PluralRules> = {
   zh: new Intl.PluralRules('zh'),
   en: new Intl.PluralRules('en'),
+  ja: new Intl.PluralRules('ja'),
 }
 
 /** Resolve plural forms to one template using the `count` param. */
@@ -2991,11 +2989,12 @@ function substitute(template: string, params: I18nParams): string {
  */
 export function tOr(key: string, fallback: string, params: I18nParams = {}): string {
   const entry = (dict as Record<string, Partial<Record<Lang, I18nText>>>)[key]
-  return substitute(pickText(entry?.[activeLang], params) ?? fallback, params)
+  const text = entry?.[activeLang] ?? (activeLang === 'ja' ? entry?.en : undefined)
+  return substitute(pickText(text, params) ?? fallback, params)
 }
 
 /** Read-only view of the dictionary for audits (scripts/verify-i18n.ts). */
-export const i18nDict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText }>> = dict
+export const i18nDict: Readonly<Record<string, { readonly zh?: I18nText; readonly en?: I18nText; readonly ja?: I18nText }>> = dict
 
 // ── persistence (~/.dsh-tui/lang.json) ─────────────────────────────────
 
@@ -3059,6 +3058,7 @@ export function detectLocaleLang(): Lang {
     ''
   const locale = raw.split('.')[0]?.toLowerCase() ?? ''
   if (locale === '') return 'zh'
+  if (locale.startsWith('ja')) return 'ja'
   return locale.startsWith('zh') ? 'zh' : 'en'
 }
 
